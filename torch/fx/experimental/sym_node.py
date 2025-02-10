@@ -516,7 +516,9 @@ class SymNode:
     def guard_bool(self, file, line):
         # TODO: use the file/line for some useful diagnostic on why a
         # guard occurred
-        r = self.shape_env.evaluate_expr(self.expr, self.hint, fx_node=self.fx_node)
+        r = self.shape_env.evaluate_expr(
+            self.expr, self.hint, fx_node=self.fx_node, expr_sym_node=self
+        )
         try:
             return bool(r)
         except Exception:
@@ -569,7 +571,11 @@ class SymNode:
         # TODO: use the file/line for some useful diagnostic on why a
         # guard occurred
         r = self.shape_env.evaluate_expr(
-            self.expr, self.hint, fx_node=self.fx_node, size_oblivious=True
+            self.expr,
+            self.hint,
+            fx_node=self.fx_node,
+            size_oblivious=True,
+            expr_sym_node=self,
         )
         try:
             return bool(r)
@@ -1291,17 +1297,20 @@ def _make_node_magic(method, func):
                 finally:
                     del frame
 
-                if other is not None:
-                    arguments = [str(self), str(other)]
-                else:
-                    arguments = [str(self)]
+                def get_id(sym_node) -> Optional[int]:
+                    # We don't want to return an ID if the input is a constant
+                    return None if sym_node.constant is not None else id(sym_node)
 
                 dtrace_structured(
                     "expression_created",
                     metadata_fn=lambda: {
                         "method": method,
-                        "arguments": arguments,
                         "result": str(result),
+                        "result_id": id(result),
+                        "arguments": [str(self), str(other)],
+                        "argument_ids": [
+                            i for i in (get_id(self), get_id(other)) if i is not None
+                        ],
                         "user_bottom_stack": str(user_bottom_stack),
                         "user_top_stack": str(user_top_stack),
                         "floc": str(floc),

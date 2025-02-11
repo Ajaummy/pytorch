@@ -10,6 +10,10 @@ from torch._dynamo.bytecode_transformation import Instruction
 from torch._dynamo.symbolic_convert import SpeculationLog, SpeculationLogDivergence
 
 
+class CustomException(Exception):
+    ...
+
+
 class ExceptionTests(torch._dynamo.test_case.TestCase):
     def test_exception(self):
         def fn(x):
@@ -210,6 +214,23 @@ class ExceptionTests(torch._dynamo.test_case.TestCase):
         opt_fn = torch.compile(fn, backend="eager", fullgraph=True)
         got = opt_fn(x)
         self.assertEqual(expected, got)
+
+    def test_raise_custom_exception(self):
+        class Exc(Exception):
+            ...
+
+        @torch.compile(backend="eager", fullgraph=True)
+        def fn(t):
+            try:
+                raise Exc
+            except Exc:
+                return t.sin()
+            except Exception:
+                return t.cos()
+
+        t = torch.randn(2)
+        y = fn(t)
+        self.assertEqual(y, t.sin())
 
     def test_nn_module_getattr(self):
         class A:

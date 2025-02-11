@@ -94,10 +94,10 @@ from several research papers on this topic, as well as current and past work suc
 [torch-autograd](https://github.com/twitter/torch-autograd),
 [autograd](https://github.com/HIPS/autograd),
 [Chainer](https://chainer.org), etc.
-
+Index coding 
 While this technique is not unique to PyTorch, it's one of the fastest implementations of it to date.
 You get the best of speed and flexibility for your crazy research.
-
+Analytical tools 
 ![Dynamic graph](https://github.com/pytorch/pytorch/raw/main/docs/source/_static/img/dynamic_graph.gif)
 
 ### Python First

@@ -1,5 +1,6 @@
 # Owner(s): ["module: dynamo"]
 
+import sys
 import unittest
 
 import torch
@@ -519,7 +520,17 @@ class ExceptionTests(torch._dynamo.test_case.TestCase):
         x = torch.randn(4)
         self.assertEqual(fn(x), opt_fn(x))
 
-    @unittest.expectedFailure
+    @make_dynamo_test
+    def test_user_defined_exception_variable(self):
+        z = 0
+        try:
+            raise CustomException
+        except ValueError:
+            z = 1
+        except CustomException:
+            z = 2
+        self.assertEqual(z, 2)
+
     @make_dynamo_test
     def test_raise_set___context__(self):
         try:
@@ -559,7 +570,6 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         self.assertIsNone(e.__context__)
         self.assertIsNone(e.__cause__)
 
-    @unittest.expectedFailure
     @make_dynamo_test
     def testChainingDescriptors(self):
         try:
@@ -579,7 +589,6 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         e.__suppress_context__ = False
         self.assertFalse(e.__suppress_context__)
 
-    @unittest.expectedFailure
     @make_dynamo_test
     def test_context_of_exception_in_try_and_finally(self):
         try:
@@ -595,7 +604,6 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         self.assertIs(exc, ve)
         self.assertIs(exc.__context__, te)
 
-    @unittest.expectedFailure
     @make_dynamo_test
     def test_context_of_exception_in_except_and_finally(self):
         try:
@@ -615,7 +623,6 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         self.assertIs(exc.__context__, ve)
         self.assertIs(exc.__context__.__context__, te)
 
-    @unittest.expectedFailure
     @make_dynamo_test
     def test_context_of_exception_in_else_and_finally(self):
         try:
@@ -635,7 +642,7 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         self.assertIs(exc, oe)
         self.assertIs(exc.__context__, ve)
 
-    @unittest.expectedFailure
+    @unittest.skipIf(sys.version_info < (3, 11), "Python 3.11+")
     @make_dynamo_test
     def test_raise_does_not_create_context_chain_cycle(self):
         A = AssertionError
@@ -674,7 +681,7 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         self.assertIs(c.__context__, b)
         self.assertIsNone(b.__context__)
 
-    @unittest.expectedFailure
+    @unittest.skipIf(sys.version_info < (3, 11), "Python 3.11+")
     @make_dynamo_test
     def test_no_hang_on_context_chain_cycle1(self):
         # See issue 25782. Cycle in context chain.
@@ -730,7 +737,7 @@ class CPythonExceptionTests(torch._dynamo.test_case.TestCase):
         self.assertIs(b.__context__, a)
         self.assertIs(a.__context__, c)
 
-    @unittest.expectedFailure
+    @unittest.skipIf(sys.version_info < (3, 11), "Python 3.11+")
     @make_dynamo_test
     def test_no_hang_on_context_chain_cycle3(self):
         # See issue 25782. Longer context chain with cycle.

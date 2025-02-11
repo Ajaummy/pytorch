@@ -288,7 +288,7 @@ mixed_mm_choice: Literal["default", "triton", "aten", "heuristic"] = "heuristic"
 
 # enable reordering pass for increasing overlap between compute and communication
 # only use with fsdp
-reorder_for_compute_comm_overlap = False
+reorder_for_compute_comm_overlap = True
 
 # passes (in execution order) for increasing overlap between compute and communication
 # for built-in passes, use string name; for user-defined passes, pass in the function handle
@@ -303,9 +303,10 @@ reorder_for_compute_comm_overlap_passes: list[
         ],
     ]
 ] = [
-    "reorder_compute_for_overlap",
-    "sink_waits",
-    "raise_comms",
+    "sink_comms_and_waits",
+    "reorder_comms_preserving_peak_memory",
+    # "reorder_compute_for_overlap",
+    # "raise_comms",
 ]
 
 # enable operator reordering for peak memory optimization

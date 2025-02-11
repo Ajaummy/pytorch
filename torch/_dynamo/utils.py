@@ -2356,6 +2356,7 @@ dict_methods = {
 
 tuple_new = tuple.__new__
 tuple_methods = {method for method in tuple.__dict__.values() if callable(method)}
+list_methods = {method for method in list.__dict__.values() if callable(method)}
 
 
 def builtin_dict_keys(d):
@@ -2408,7 +2409,11 @@ def to_subclass(t, cls):
 
 
 def dict_keys_getitem(d, n):
-    return next(itertools.islice(iter(d), n, n + 1))
+    # Call dict(d) to prevent calling overridden __iter__
+    dict_class = dict
+    if isinstance(d, OrderedDict):
+        dict_class = OrderedDict
+    return next(itertools.islice(iter(dict_class(d)), n, n + 1))
 
 
 def enum_repr(value, local):
